@@ -220,7 +220,9 @@ State: class {
                 if(escapeSeq) {
                     /* escape sequence, second char. */
                     out: Char
-                    if(unescape(data, out&)) {
+                    if(data == '\n') {
+                        /* multiline! ignore. */
+                    } else if(unescape(data, out&)) {
                         /* valid escape sequence! */
                         value append(out)
                     } else {
