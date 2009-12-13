@@ -45,6 +45,17 @@ INIFile: class {
         section
     }
 
+    hasSection: func (name: String) -> Bool {
+        sections contains(name)
+    }
+
+    getSection: func (name: String) -> INISection {
+        if(!hasSection(name)) {
+            addSection(name)
+        }
+        sections get(name)
+    }
+
     dump: func -> String {
         buffer := StringBuffer new()
         for(name: String in sections keys) {
@@ -66,6 +77,10 @@ State: class {
     value: StringBuffer
 
     init: func {
+        reset()
+    }
+
+    reset: func {
         setState(States section)
         section = ""
         quoted = false

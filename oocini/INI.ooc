@@ -1,68 +1,95 @@
-import iniparser, dictionary
-import io/File
+import io/[File, FileReader, FileWriter]
 
-fclose: extern func(FILE*)
+import oocini/Parser
+
 INI: class {
 
     fileName: String
-    dict: DictPtr
+    state: State
+    file: INIFile
     section = null: String
 
-    init: func(=fileName) {
-        dict = iniparser_load(fileName)
+    init: func {
+        state = State new()
     }
 
-    dumpINI: func ~explicitFile(file: String) {
-        fptr := fopen(file, "w")
-        iniparser_dump_ini(dict, fptr)
-        fclose(fptr)
+    init: func ~explicitFilename (=fileName) {
+        this()
+        state parse(FileReader new(fileName))
+        file = state file
+    }
+
+    dump: func ~explicitFileName (fileName: String) {
+        writer := FileWriter new(fileName)
+        writer write(file dump())
+        writer close()
     }
     
-    dumpINI: func() {
-        fptr := fopen(fileName, "w")
-        iniparser_dump_ini(dict, fptr)
-        fclose(fptr)
+    dump: func {
+        writer := FileWriter new(fileName)
+        writer write(file dump())
+        writer close()    
     }
 
-    dump: func ~explicitFile(fptr: FILE*) {
-        iniparser_dump(dict, fptr)
-    }
-
-    dump: func() {
-        fptr := fopen(fileName, "w")
-        iniparser_dump(dict, fptr)
-        fclose(fptr)
+    dump: func ~explicitFile (fptr: File) {
+        writer := FileWriter new(fptr)
+        writer write(file dump())
+        writer close()    
     }
 
     setCurrentSection: func(=section) {}
 
     getEntry: func<T> (key: String, def: T) -> T {
-        entry: String
-        result: T // Without extra var ooc uses char* to the match
-        match section {
-            case null => entry = key; "ERROR: No section chosen" println() // TODO: add `verbose` mode
-            case      => entry = section + ":" + key
+        section := match this section {
+            case null => file sections get("")
+            case => file sections get(this section)
         }
-        match T { 
-            case String => result = iniparser_getstring(dict, entry, def)
-            case Bool   => result = iniparser_getboolean(dict, entry, def)
-            case Int    => result = iniparser_getint(dict, entry, def)
-            case Double => result = iniparser_getdouble(dict, entry, def)
-        } 
-        return result
+        value := section values get(key) /* TODO: segfault protection for the uncool ones */
+        if(value == null) {
+            return def
+        } else {
+            match T {
+                case String => {
+                    return value
+                }
+                case Bool => {
+                    first := value[0]
+                    if(first == 'y' \
+                        || first == 'Y' \
+                        || first == 't' \
+                        || first == 'T' \
+                        || first == '1') {
+                        return true
+                    } else if(first == 'n' \
+                        || first == 'N' \
+                        || first == 'f' \
+                        || first == 'F' \
+                        || first == '0') {
+                        return false
+                    } else {
+                        return def
+                    }
+                }
+                case Int => {
+                    return value toInt()
+                }
+                case Double => {
+                    return value toDouble()
+                }
+                case => {
+                    "STRANGE STUFF MAN! Unknown type." println()
+                }
+            }
+        }
     }
 
-    setEntry: func<T> (key: String, val: String) -> Int {
-        entry: String
-        match section {
-            case null => entry = key
-            case      => entry = section + ":" + key
-            
+    setEntry: func<T> (key: String, val: String) {
+        section := match this section {
+            case null => file sections get("")
+            case => file sections get(this section)
         }
-        iniparser_set(dict, entry, val)
+        section addValue(key, val)
     }
-        
-            
 }
 
 
