@@ -18,6 +18,12 @@ INISection: class {
     addValue: func (key, value: String) {
         values put(key, value)
     }
+
+    dump: func (buffer: StringBuffer) {
+        for(key: String in values keys) {
+            buffer append("%s=%s\n" format(key, values get(key)))
+        }
+    }
 }
 
 INIFile: class {
@@ -27,10 +33,22 @@ INIFile: class {
         sections = HashMap<INISection> new()
     }
 
-    addINISection: func (name: String) -> INISection {
+    addSection: func (name: String) -> INISection {
         section := INISection new()
         sections put(name, section)
         section
+    }
+
+    dump: func -> String {
+        buffer := StringBuffer new()
+        for(name: String in sections keys) {
+            if(!name isEmpty()) {
+                buffer append("[%s]\n" format(name))
+            }
+            sections get(name) dump(buffer)
+            buffer append("\n")
+        }
+        buffer toString()
     }
 }
 
@@ -45,6 +63,8 @@ State: class {
         section = ""
         file = INIFile new()
         value = StringBuffer new()
+        /* add 'default' section */
+        file addSection("")
     }
 
     setState: func (=state) {}
@@ -130,7 +150,7 @@ State: class {
                 if(data == ']') {
                     /* end of section name, set it, new state: section */
                     section = value toString()
-                    file addINISection(section)
+                    file addSection(section)
                     resetValue()
                     setState(States section)
                 } /* TODO: check invalid chars */ else {
