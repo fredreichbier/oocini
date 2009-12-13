@@ -43,52 +43,34 @@ INI: class {
 
     setCurrentSection: func(=section) {}
 
-    getOption: func<T> (sectionName, key: String, T: Class, def: T) -> T {
+    getOption: func (sectionName, key: String) -> String {
         section := file sections get(sectionName)
         value := section values get(key) /* TODO: segfault protection for the uncool ones */
-        if(value == null) {
-            return def
-        } else {
-            match T {
-                case String => {
-                    return value
-                }
-                case Bool => {
-                    first := value[0]
-                    if(first == 'y' \
-                        || first == 'Y' \
-                        || first == 't' \
-                        || first == 'T' \
-                        || first == '1') {
-                        return true
-                    } else if(first == 'n' \
-                        || first == 'N' \
-                        || first == 'f' \
-                        || first == 'F' \
-                        || first == '0') {
-                        return false
-                    } else {
-                        return def
-                    }
-                }
-                case Int => {
-                    return value toInt()
-                }
-                case Double => {
-                    return value toDouble()
-                }
-                case => {
-                    "STRANGE STUFF MAN! Unknown type." println()
-                }
-            }
-        }
+        /* TODO: ensure it returns null for unknown values */
+        return value
     }
 
-    getOption: func<T> ~implicitSection (key: String, T: Class, def: T) -> T {
+    getOption: func ~implicitSection (key: String) -> String {
         section := this section
         if(section == null)
             section = ""
-        return getOption(section, key, T, def)
+        return getOption(section, key)
+    }
+
+    getOption: func ~withDefault (sectionName, key, def: String) -> String {
+        value := getOption(sectionName, key)
+        if(value == null) {
+            value = def
+        }
+        return value    
+    }
+
+    getOption: func ~implicitSectionWithDefault (key, def: String) -> String {
+        value := getOption(key)
+        if(value == null) {
+            value = def
+        }
+        return value
     }
 
     setOption: func (sectionName, key: String, val: String) {
