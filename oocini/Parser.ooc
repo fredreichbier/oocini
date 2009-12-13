@@ -169,6 +169,9 @@ State: class {
                     setState(States sectionName)
                 } else if(data == '\n' || data == ' ') {
                     /* whitespace, ignore. */
+                } else if(data == '#' || data == ';') {
+                    /* comment. change state. */
+                    setState(States comment)
                 } else {
                     /* key starting. */
                     /* check if the char is valid. */
@@ -194,15 +197,16 @@ State: class {
                         value append(data)
                     }
                     escapeSeq = false
-                } else if(data == '=') {
+                } else if(data == '=' || data == ':') {
                     /* value starting! */
                     /* save trimmed key */
                     key = value toString() trim()
                     resetValue()
                     /* new state: value */
                     setState(States value)
-                } else if(data == ';' || data == '\n') {
+                } else if(data == ';' || data == '#' || data == '\n') {
                     /* invalid char. */
+                    value toString() println()
                     ParseError new(This, "Unexpected char: '%c'" format(data)) throw()
                 } else if(data == '\\') {
                     /* escape sequence starting */
@@ -231,7 +235,10 @@ State: class {
                 else if(data == ' ' && value toString() isEmpty()) {
                     /* strip whitespace at the beginning */
                 }
-                else if((!quoted && data == ';') || (quoted && data == quoted) || data == '\n') {
+                else if(\
+                    (!quoted && (data == ';' || data == '#')) \
+                    || (quoted && data == quoted) \
+                    || data == '\n') {
                     /* comment starting (end of value) OR newline (also end of value) OR quotation end. */
                     /* trim the value. */
                     theValue := value toString()
@@ -247,6 +254,7 @@ State: class {
                         case '"' => States section
                         case '\'' => States section
                         case ';' => States comment
+                        case '#' => States comment
                     })
                 } else if(data == '\\') {
                     /* escape sequence starting */
