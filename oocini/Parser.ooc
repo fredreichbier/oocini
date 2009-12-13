@@ -106,9 +106,12 @@ State: class {
                 if(data == ';' || data == '\n') {
                     /* comment starting (end of value) OR newline (also end of value)! */
                     file sections get(section) addValue(key, value toString())
-                    /* reset, new state: section */
+                    /* reset */
                     resetValue()
-                    setState(States section)
+                    setState(match data {
+                        case '\n' => States section
+                        case ';' => States comment
+                    })
                 } else {
                     /* part of the value. */
                     value append(data)

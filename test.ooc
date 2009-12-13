@@ -6,4 +6,5 @@ main: func {
     reader := FileReader new("test.ini")
     parser parse(reader)
     parser file sections get("FooBar") values get("key") println()
+    parser file sections get("Bar") values get("yay") println()
 }
