@@ -21,7 +21,7 @@ INISection: class {
 
     dump: func (buffer: StringBuffer) {
         for(key: String in values keys) {
-            buffer append("%s=%s\n" format(key, values get(key)))
+            buffer append("%s = %s\n" format(key, values get(key)))
         }
     }
 }
@@ -108,8 +108,8 @@ State: class {
             case States key => {
                 if(data == '=') {
                     /* value starting! */
-                    /* save key */
-                    key = value toString()
+                    /* save trimmed key */
+                    key = value toString() trim()
                     resetValue()
                     /* new state: value */
                     setState(States value)
@@ -125,7 +125,8 @@ State: class {
             case States value => {
                 if(data == ';' || data == '\n') {
                     /* comment starting (end of value) OR newline (also end of value)! */
-                    file sections get(section) addValue(key, value toString())
+                    /* trim the value. */
+                    file sections get(section) addValue(key, value toString() trim())
                     /* reset */
                     resetValue()
                     setState(match data {
