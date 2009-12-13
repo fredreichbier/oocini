@@ -43,11 +43,8 @@ INI: class {
 
     setCurrentSection: func(=section) {}
 
-    getEntry: func<T> (key: String, def: T) -> T {
-        section := match this section {
-            case null => file sections get("")
-            case => file sections get(this section)
-        }
+    getOption: func<T> (sectionName, key: String, def: T) -> T {
+        section := file sections get(sectionName)
         value := section values get(key) /* TODO: segfault protection for the uncool ones */
         if(value == null) {
             return def
@@ -87,12 +84,23 @@ INI: class {
         }
     }
 
-    setEntry: func<T> (key: String, val: String) {
-        section := match this section {
-            case null => file sections get("")
-            case => file sections get(this section)
-        }
+    getOption: func<T> ~implicitSection (key: String, def: T) -> T {
+        section := this section
+        if(section == null)
+            section = ""
+        return getOption(section, key, def)
+    }
+
+    setOption: func (sectionName, key: String, val: String) {
+        section := this file sections get(sectionName)
         section addValue(key, val)
+    }
+
+    setOption: func ~implicitSection (key: String, val: String) {
+        section := this section
+        if(section == null)
+            section = ""
+        setOption(section, key, val)
     }
 }
 
