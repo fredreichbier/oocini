@@ -75,6 +75,10 @@ INISection: class {
         values put(key, value)
     }
 
+    hasValue: func (key: String) -> Bool {
+        values contains(key)
+    }
+
     dump: func (buffer: StringBuffer) {
         for(key: String in values keys) {
             value := values get(key)

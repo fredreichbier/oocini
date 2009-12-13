@@ -43,7 +43,7 @@ INI: class {
 
     setCurrentSection: func(=section) {}
 
-    getOption: func<T> (sectionName, key: String, def: T) -> T {
+    getOption: func<T> (sectionName, key: String, T: Class, def: T) -> T {
         section := file sections get(sectionName)
         value := section values get(key) /* TODO: segfault protection for the uncool ones */
         if(value == null) {
@@ -84,11 +84,11 @@ INI: class {
         }
     }
 
-    getOption: func<T> ~implicitSection (key: String, def: T) -> T {
+    getOption: func<T> ~implicitSection (key: String, T: Class, def: T) -> T {
         section := this section
         if(section == null)
             section = ""
-        return getOption(section, key, def)
+        return getOption(section, key, T, def)
     }
 
     setOption: func (sectionName, key: String, val: String) {
@@ -101,6 +101,14 @@ INI: class {
         if(section == null)
             section = ""
         setOption(section, key, val)
+    }
+
+    hasOption: func (sectionName, key: String) -> Bool {
+        (file hasSection(sectionName)) ? file sections get(sectionName) hasValue(key) : false 
+    }
+
+    sections: func -> Iterable<String> {
+        file sections
     }
 }
 
