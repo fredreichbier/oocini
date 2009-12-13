@@ -8,6 +8,62 @@ ParseError: class extends Exception {
     }
 }
 
+unescape: func (chr: Char, out: Char*) -> Bool {
+     cOut: Char = match chr {
+        case '\\' => '\\'
+        case '0' => '\0'
+        case 'b' => '\b'
+        case 't' => '\t'
+        case 'r' => '\r'
+        case 'n' => '\n'
+        case ';' => ';'
+        case '#' => '#'
+        case '=' => '='
+        case ':' => ':'
+        case '"' => '"'
+        case '\'' => '\''
+        case => -1
+        /* TODO: unicode characters! */
+    }
+    out@ = cOut
+    return cOut != -1
+}
+
+escape: func (chr: Char, out: Char*) -> Bool {
+     cOut: Char = match chr {
+        case '\\' => '\\'
+        case '\0' => '0'
+        case '\b' => 'b'
+        case '\t' => 't'
+        case '\r' => 'r'
+        case '\n' => 'n'
+        case ';' => ';'
+        case '#' => '#'
+        case '=' => '='
+        case ':' => ':'
+        case '"' => '"'
+        case '\'' => '\''
+        case => -1
+        /* TODO: unicode characters! */
+    }
+    out@ = cOut
+    return cOut != -1
+}
+
+escape: func ~string (s: String) -> String {
+    buffer := StringBuffer new(s length())
+    out, chr: Char
+    for(i: SizeT in 0..s length()) {
+        chr = s[i]
+        if(escape(chr, out&)) {
+            buffer append('\\') .append(out)
+        } else {
+            buffer append(chr)
+        }
+    }
+    return buffer toString()
+}
+
 INISection: class {
     values: HashMap<String>
 
@@ -22,11 +78,7 @@ INISection: class {
     dump: func (buffer: StringBuffer) {
         for(key: String in values keys) {
             value := values get(key)
-            if(value contains(';')) {
-                /* quote the value. */
-                /* TODO: escaping */
-                value = "\"%s\"" format(value)
-            }
+            value = escape(value)
             buffer append("%s = %s\n" format(key, value))
         }
     }
@@ -72,7 +124,8 @@ INIFile: class {
 State: class {
     state: Int
     section, key: String
-    quoted: Char 
+    quoted: Char
+    escapeSeq: Bool
     file: INIFile
     value: StringBuffer
 
@@ -88,6 +141,7 @@ State: class {
         value = StringBuffer new()
         /* add 'default' section */
         file addSection("")
+        escapeSeq = false
     }
 
     setState: func (=state) {}
@@ -129,24 +183,48 @@ State: class {
                 }
             }
             case States key => {
-                if(data == '=') {
+                if(escapeSeq) {
+                    /* escape sequence, second char. */
+                    out: Char
+                    if(unescape(data, out&)) {
+                        /* valid escape sequence! */
+                        value append(out)
+                    } else {
+                        /* invalid escape sequence, just append the current char. */
+                        value append(data)
+                    }
+                    escapeSeq = false
+                } else if(data == '=') {
                     /* value starting! */
                     /* save trimmed key */
                     key = value toString() trim()
                     resetValue()
                     /* new state: value */
                     setState(States value)
-                }
-                else if(data == ';' || data == '\n') {
+                } else if(data == ';' || data == '\n') {
                     /* invalid char. */
                     ParseError new(This, "Unexpected char: '%c'" format(data)) throw()
+                } else if(data == '\\') {
+                    /* escape sequence starting */
+                    escapeSeq = true
                 } else {
                     /* key is continued. */
                     value append(data)
                 }
             }
             case States value => {
-                if((data == '"' || data == '\'') && value toString() isEmpty()) {
+                if(escapeSeq) {
+                    /* escape sequence, second char. */
+                    out: Char
+                    if(unescape(data, out&)) {
+                        /* valid escape sequence! */
+                        value append(out)
+                    } else {
+                        /* invalid escape sequence, just append the current char. */
+                        value append(data)
+                    }
+                    escapeSeq = false
+                } else if((data == '"' || data == '\'') && value toString() isEmpty()) {
                     /* quoted. */
                     quoted = data
                 }
@@ -170,6 +248,9 @@ State: class {
                         case '\'' => States section
                         case ';' => States comment
                     })
+                } else if(data == '\\') {
+                    /* escape sequence starting */
+                    escapeSeq = true
                 } else {
                     /* part of the value. */
                     value append(data)
