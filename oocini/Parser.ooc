@@ -21,7 +21,13 @@ INISection: class {
 
     dump: func (buffer: StringBuffer) {
         for(key: String in values keys) {
-            buffer append("%s = %s\n" format(key, values get(key)))
+            value := values get(key)
+            if(value contains(';')) {
+                /* quote the value. */
+                /* TODO: escaping */
+                value = "\"%s\"" format(value)
+            }
+            buffer append("%s = %s\n" format(key, value))
         }
     }
 }
@@ -55,12 +61,14 @@ INIFile: class {
 State: class {
     state: Int
     section, key: String
+    quoted: Bool
     file: INIFile
     value: StringBuffer
 
     init: func {
         setState(States section)
         section = ""
+        quoted = false
         file = INIFile new()
         value = StringBuffer new()
         /* add 'default' section */
@@ -123,14 +131,27 @@ State: class {
                 }
             }
             case States value => {
-                if(data == ';' || data == '\n') {
-                    /* comment starting (end of value) OR newline (also end of value)! */
+                if(data == '"' && value toString() isEmpty()) {
+                    /* quoted. */
+                    quoted = true
+                }
+                else if(data == ' ' && value toString() isEmpty()) {
+                    /* strip whitespace at the beginning */
+                }
+                else if((!quoted && data == ';') || (quoted && data == '"') || data == '\n') {
+                    /* comment starting (end of value) OR newline (also end of value) OR quotation end. */
                     /* trim the value. */
-                    file sections get(section) addValue(key, value toString() trim())
+                    theValue := value toString()
+                    if(!quoted) {
+                        theValue = theValue trim()
+                    }
+                    quoted = false
+                    file sections get(section) addValue(key, theValue)
                     /* reset */
                     resetValue()
                     setState(match data {
                         case '\n' => States section
+                        case '"' => States section
                         case ';' => States comment
                     })
                 } else {
