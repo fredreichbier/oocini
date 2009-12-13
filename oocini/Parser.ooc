@@ -72,7 +72,7 @@ INIFile: class {
 State: class {
     state: Int
     section, key: String
-    quoted: Bool
+    quoted: Char 
     file: INIFile
     value: StringBuffer
 
@@ -83,7 +83,7 @@ State: class {
     reset: func {
         setState(States section)
         section = ""
-        quoted = false
+        quoted = 0
         file = INIFile new()
         value = StringBuffer new()
         /* add 'default' section */
@@ -146,27 +146,28 @@ State: class {
                 }
             }
             case States value => {
-                if(data == '"' && value toString() isEmpty()) {
+                if((data == '"' || data == '\'') && value toString() isEmpty()) {
                     /* quoted. */
-                    quoted = true
+                    quoted = data
                 }
                 else if(data == ' ' && value toString() isEmpty()) {
                     /* strip whitespace at the beginning */
                 }
-                else if((!quoted && data == ';') || (quoted && data == '"') || data == '\n') {
+                else if((!quoted && data == ';') || (quoted && data == quoted) || data == '\n') {
                     /* comment starting (end of value) OR newline (also end of value) OR quotation end. */
                     /* trim the value. */
                     theValue := value toString()
                     if(!quoted) {
                         theValue = theValue trim()
                     }
-                    quoted = false
+                    quoted = 0
                     file sections get(section) addValue(key, theValue)
                     /* reset */
                     resetValue()
                     setState(match data {
                         case '\n' => States section
                         case '"' => States section
+                        case '\'' => States section
                         case ';' => States comment
                     })
                 } else {

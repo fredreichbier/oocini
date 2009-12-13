@@ -1,12 +1,13 @@
 use oocini
+import structs/Array
+
 import oocini/INI
 
-main: func {
-
-    file := "twisted.ini"
-    a := INI new(file)
-    a setCurrentSection("quotes")
-    b := a getEntry("h1", "blub")
-    b println()
-
+main: func (args: Array<String>) -> Int {
+    if(args size < 2) {
+        "./test INIFILE" println()
+        return 1
+    }
+    ini := INI new(args[1])
+    ini dumpToString() println()
 }

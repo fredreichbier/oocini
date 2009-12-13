@@ -31,6 +31,10 @@ INI: class {
         writer close()    
     }
 
+    dumpToString: func -> String {
+        file dump()
+    }
+
     dump: func ~explicitFile (fptr: File) {
         writer := FileWriter new(fptr)
         writer write(file dump())
