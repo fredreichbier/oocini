@@ -75,6 +75,9 @@ INI: class {
 
     setOption: func (sectionName, key: String, val: String) {
         section := this file sections get(sectionName)
+        if(!section) {
+            section = this file addSection(sectionName)
+        }
         section addValue(key, val)
     }
 
