@@ -1,5 +1,5 @@
 import io/Reader
-import text/StringBuffer
+import text/Buffer
 import structs/HashMap
 
 ParseError: class extends Exception {
@@ -51,7 +51,7 @@ escape: func (chr: Char, out: Char*) -> Bool {
 }
 
 escape: func ~string (s: String) -> String {
-    buffer := StringBuffer new(s length())
+    buffer := Buffer new(s length())
     out, chr: Char
     for(i: SizeT in 0..s length()) {
         chr = s[i]
@@ -79,7 +79,7 @@ INISection: class {
         values contains(key)
     }
 
-    dump: func (buffer: StringBuffer) {
+    dump: func (buffer: Buffer) {
         for(key: String in values keys) {
             value := values get(key)
             value = escape(value)
@@ -113,7 +113,7 @@ INIFile: class {
     }
 
     dump: func -> String {
-        buffer := StringBuffer new()
+        buffer := Buffer new()
         for(name: String in sections keys) {
             if(!name isEmpty()) {
                 buffer append("[%s]\n" format(name))
@@ -131,7 +131,7 @@ State: class {
     quoted: Char
     escapeSeq: Bool
     file: INIFile
-    value: StringBuffer
+    value: Buffer
 
     init: func {
         reset()
@@ -142,7 +142,7 @@ State: class {
         section = ""
         quoted = 0
         file = INIFile new()
-        value = StringBuffer new()
+        value = Buffer new()
         /* add 'default' section */
         file addSection("")
         escapeSeq = false
@@ -151,7 +151,7 @@ State: class {
     setState: func (=state) {}
 
     resetValue: func {
-        value = StringBuffer new()
+        value = Buffer new()
     }
 
     feed: func ~string (data: String, length: SizeT) {
