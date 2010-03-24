@@ -65,10 +65,10 @@ escape: func ~string (s: String) -> String {
 }
 
 INISection: class {
-    values: HashMap<String>
+    values: HashMap<String, String>
 
     init: func {
-        values = HashMap<String> new()
+        values = HashMap<String, String> new()
     }
 
     addValue: func (key, value: String) {
@@ -89,10 +89,10 @@ INISection: class {
 }
 
 INIFile: class {
-    sections: HashMap<INISection>
+    sections: HashMap<String, INISection>
 
     init: func {
-        sections = HashMap<INISection> new()
+        sections = HashMap<String, INISection> new()
     }
 
     addSection: func (name: String) -> INISection {
