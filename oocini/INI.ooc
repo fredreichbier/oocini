@@ -14,7 +14,7 @@ INI: class {
     }
 
     init: func ~explicitFilename (=fileName) {
-        this()
+        init()
         state parse(FileReader new(fileName))
         file = state file
     }
