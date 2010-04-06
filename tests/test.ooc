@@ -1,9 +1,9 @@
 use oocini
-import structs/Array
+import structs/ArrayList
 
 import oocini/INI
 
-main: func (args: Array<String>) -> Int {
+main: func (args: ArrayList<String>) -> Int {
     if(args size < 2) {
         "./test INIFILE" println()
         return 1

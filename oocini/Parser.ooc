@@ -80,7 +80,7 @@ INISection: class {
     }
 
     dump: func (buffer: Buffer) {
-        for(key: String in values keys) {
+        for(key: String in values getKeys()) {
             value := values get(key)
             value = escape(value)
             buffer append("%s = %s\n" format(key, value))
@@ -114,7 +114,7 @@ INIFile: class {
 
     dump: func -> String {
         buffer := Buffer new()
-        for(name: String in sections keys) {
+        for(name: String in sections getKeys()) {
             if(!name isEmpty()) {
                 buffer append("[%s]\n" format(name))
             }
