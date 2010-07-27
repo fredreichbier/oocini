@@ -76,7 +76,7 @@ INISection: class {
     }
 
     hasValue: func (key: String) -> Bool {
-        values contains(key)
+        values contains?(key)
     }
 
     dump: func (buffer: Buffer) {
@@ -102,7 +102,7 @@ INIFile: class {
     }
 
     hasSection: func (name: String) -> Bool {
-        sections contains(name)
+        sections contains?(name)
     }
 
     getSection: func (name: String) -> INISection {
@@ -115,7 +115,7 @@ INIFile: class {
     dump: func -> String {
         buffer := Buffer new()
         for(name: String in sections getKeys()) {
-            if(!name isEmpty()) {
+            if(!name empty?()) {
                 buffer append("[%s]\n" format(name))
             }
             sections get(name) dump(buffer)
@@ -234,11 +234,11 @@ State: class {
                         value append(data)
                     }
                     escapeSeq = false
-                } else if((data == '"' || data == '\'') && value toString() isEmpty()) {
+                } else if((data == '"' || data == '\'') && value toString() empty?()) {
                     /* quoted. */
                     quoted = data
                 }
-                else if(data == ' ' && value toString() isEmpty()) {
+                else if(data == ' ' && value toString() empty?()) {
                     /* strip whitespace at the beginning */
                 }
                 else if(\
