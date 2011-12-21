@@ -1,10 +1,9 @@
 import io/Reader
-import text/Buffer
 import structs/HashMap
 
 ParseError: class extends Exception {
-    init: func ~withMsg (.msg) {
-        super(msg)
+    init: func ~withMsg (=message) {
+        super(message)
     }
 }
 
@@ -22,7 +21,7 @@ unescape: func (chr: Char, out: Char*) -> Bool {
         case ':' => ':'
         case '"' => '"'
         case '\'' => '\''
-        case => -1
+        case => -1 as Char
         /* TODO: unicode characters! */
     }
     out@ = cOut
@@ -43,7 +42,7 @@ escape: func (chr: Char, out: Char*) -> Bool {
         case ':' => ':'
         case '"' => '"'
         case '\'' => '\''
-        case => -1
+        case => -1 as Char
         /* TODO: unicode characters! */
     }
     out@ = cOut
@@ -140,7 +139,7 @@ State: class {
     reset: func {
         setState(States section)
         section = ""
-        quoted = 0
+        quoted = '\0'
         file = INIFile new()
         value = Buffer new()
         /* add 'default' section */
@@ -154,7 +153,7 @@ State: class {
         value = Buffer new()
     }
 
-    feed: func ~string (data: String, length: SizeT) {
+    feed: func ~string (data: Buffer, length: SizeT) {
         for(i: Int in 0..length) {
             feed(data[i])
         }
@@ -251,7 +250,7 @@ State: class {
                     if(!quoted) {
                         theValue = theValue trim()
                     }
-                    quoted = 0
+                    quoted = '\0'
                     file sections get(section) addValue(key, theValue)
                     /* reset */
                     resetValue()
@@ -295,9 +294,9 @@ State: class {
 
     parse: func (reader: Reader) {
         bufferSize := const 10
-        chars := String new(bufferSize)
+        chars := Buffer new(bufferSize)
         while(true) {
-            count := reader read(chars, 0, 10)
+            count := reader read(chars)
             feed(chars, count)
             if(count < bufferSize) {
                 break
