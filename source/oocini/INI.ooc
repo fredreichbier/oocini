@@ -1,5 +1,5 @@
 import io/[File, FileReader, FileWriter]
-
+import structs/HashMap
 import oocini/Parser
 
 INI: class {
@@ -92,7 +92,7 @@ INI: class {
         (file hasSection(sectionName)) ? file sections get(sectionName) hasValue(key) : false 
     }
 
-    sections: func -> Iterable<String> {
+    sections: func -> HashMap<String, INISection> {
         file sections
     }
 }

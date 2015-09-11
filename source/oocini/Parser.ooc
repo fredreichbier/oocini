@@ -21,7 +21,7 @@ unescape: func (chr: Char, out: Char*) -> Bool {
         case ':' => ':'
         case '"' => '"'
         case '\'' => '\''
-        case => -1 as Char
+        case => ((-1) as Char)
         /* TODO: unicode characters! */
     }
     out@ = cOut
@@ -42,7 +42,7 @@ escape: func (chr: Char, out: Char*) -> Bool {
         case ':' => ':'
         case '"' => '"'
         case '\'' => '\''
-        case => -1 as Char
+        case => ((-1) as Char)
         /* TODO: unicode characters! */
     }
     out@ = cOut
@@ -179,7 +179,7 @@ State: class {
                     /* key starting. */
                     /* check if the char is valid. */
                     if(data == '=') {
-                        ParseError new(This, "Unexpected char: '='") throw()
+                        ParseError new("Unexpected char: '='") throw()
                     } else {
                         /* valid char! */
                         value append(data)
@@ -210,7 +210,7 @@ State: class {
                 } else if(data == ';' || data == '#' || data == '\n') {
                     /* invalid char. */
                     value toString() println()
-                    ParseError new(This, "Unexpected char: '%c'" format(data)) throw()
+                    ParseError new("Unexpected char: '%c'" format(data)) throw()
                 } else if(data == '\\') {
                     /* escape sequence starting */
                     escapeSeq = true
